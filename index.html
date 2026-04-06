@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>波浪ブイ（XB-200）検証報告 | 沿岸海洋調査㈱</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=Noto+Sans+JP:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root {
+  --navy:     #1a2744;
+  --blue:     #1e4a8a;
+  --blue-mid: #2a6ab0;
+  --blue-lt:  #ddeeff;
+  --bg:       #f8f9fb;
+  --white:    #ffffff;
+  --border:   #d4dde8;
+  --text:     #1a2030;
+  --sub:      #4a5568;
+  --mute:     #8898a8;
+  --serif: 'Noto Serif JP', serif;
+  --sans:  'Noto Sans JP', sans-serif;
+  --mono:  'DM Mono', monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:15px;line-height:1.85;}
+
+/* ── HEADER ── */
+header{background:var(--navy);color:white;padding:48px 0 36px;border-bottom:3px solid var(--blue-mid);}
+.hd{max-width:900px;margin:0 auto;padding:0 40px;}
+.hd-id{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:rgba(255,255,255,.38);text-transform:uppercase;margin-bottom:14px;}
+header h1{font-family:var(--serif);font-size:clamp(18px,2.8vw,24px);font-weight:600;line-height:1.55;margin-bottom:20px;}
+.hd-meta{display:flex;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.12);padding-top:16px;gap:0;}
+.meta-item{padding:4px 24px 4px 0;margin-right:24px;font-size:12px;color:rgba(255,255,255,.5);font-family:var(--mono);border-right:1px solid rgba(255,255,255,.1);}
+.meta-item:last-child{border-right:none;}
+.meta-item strong{display:block;font-size:10px;color:rgba(255,255,255,.28);margin-bottom:2px;}
+
+/* ── NAV ── */
+nav{background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;}
+nav ul{list-style:none;display:flex;max-width:900px;margin:0 auto;padding:0 40px;overflow-x:auto;}
+nav a{display:block;padding:13px 18px;font-size:13px;color:var(--sub);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;transition:color .2s,border-color .2s;}
+nav a:hover{color:var(--blue);border-bottom-color:var(--blue);}
+
+/* ── MAIN ── */
+main{max-width:900px;margin:0 auto;padding:56px 40px 96px;}
+section{margin-bottom:72px;}
+.sec-head{display:flex;align-items:center;gap:14px;margin-bottom:24px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.sec-num{font-family:var(--mono);font-size:10px;color:var(--mute);letter-spacing:.1em;}
+h2{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--navy);}
+
+/* ── CARDS ── */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:28px;}
+.card{background:var(--white);border:1px solid var(--border);border-top:2px solid var(--blue-mid);border-radius:4px;padding:16px 18px;}
+.card-label{font-family:var(--mono);font-size:10px;color:var(--mute);margin-bottom:6px;letter-spacing:.06em;}
+.card-value{font-family:var(--serif);font-size:26px;font-weight:600;color:var(--navy);line-height:1.1;}
+.card-unit{font-size:13px;font-weight:400;color:var(--sub);margin-left:3px;}
+
+/* ── PROSE ── */
+.prose p{color:var(--sub);margin-bottom:13px;font-size:14.5px;}
+.prose ul{padding-left:20px;color:var(--sub);font-size:14.5px;}
+.prose li{margin-bottom:6px;}
+
+/* ── MAP ── */
+#survey-map{height:360px;border:1px solid var(--border);border-radius:4px;margin-bottom:8px;}
+
+/* ── FIGURE ── */
+figure{background:var(--white);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:20px;}
+figure img{width:100%;display:block;}
+figcaption{padding:10px 16px;font-size:12px;color:var(--mute);font-family:var(--mono);background:var(--bg);border-top:1px solid var(--border);}
+figcaption strong{color:var(--blue);margin-right:6px;}
+
+/* ── 2カラム図 ── */
+.fig-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+.fig-grid figure{margin-bottom:0;}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:4px;background:var(--white);margin-bottom:20px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead{background:var(--navy);color:white;}
+thead th{padding:11px 14px;text-align:left;font-weight:400;font-family:var(--mono);font-size:12px;white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--border);}
+tbody tr:hover{background:#f0f5fb;}
+td{padding:10px 14px;font-family:var(--mono);font-size:13px;color:var(--sub);}
+td:first-child{color:var(--text);font-family:var(--sans);font-weight:500;}
+
+/* ── CALLOUT ── */
+.callout{border-left:4px solid var(--blue-mid);background:var(--blue-lt);border-radius:4px;padding:13px 16px;margin:16px 0;}
+.callout-title{font-size:12px;font-weight:700;color:var(--blue);margin-bottom:5px;font-family:var(--mono);letter-spacing:.05em;}
+.callout p{color:var(--sub);font-size:14px;margin:0;}
+
+/* ── RECOMMEND BADGE ── */
+.param-list{display:flex;flex-direction:column;gap:10px;margin:16px 0;}
+.param-item{display:flex;align-items:flex-start;gap:14px;background:var(--white);border:1px solid var(--border);border-left:4px solid var(--blue-mid);border-radius:4px;padding:14px 16px;}
+.param-badge{background:var(--navy);color:white;font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:3px;flex-shrink:0;margin-top:2px;letter-spacing:.06em;}
+.param-name{font-weight:700;font-size:14px;margin-bottom:3px;color:var(--navy);}
+.param-desc{font-size:13px;color:var(--sub);}
+
+/* ── FOOTER ── */
+footer{background:var(--navy);color:rgba(255,255,255,.4);text-align:center;padding:28px 24px;font-family:var(--mono);font-size:11px;line-height:2.2;letter-spacing:.06em;}
+
+@media(max-width:640px){
+  .hd,main{padding-left:20px;padding-right:20px;}
+  nav ul{padding:0 12px;}
+  .fig-grid{grid-template-columns:1fr;}
+  .cards{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="hd">
+    <div class="hd-id">Internal Analysis · XB-200 Validation Report</div>
+    <h1>波浪ブイ（Nexsens XB-200）と<br>ナウファス（直江津）のデータ比較検証報告書</h1>
+    <div class="hd-meta">
+      <div class="meta-item"><strong>作成日</strong>2026-02-25</div>
+      <div class="meta-item"><strong>調査機関</strong>沿岸海洋調査㈱</div>
+      <div class="meta-item"><strong>比較地点</strong>直江津沖</div>
+      <div class="meta-item"><strong>対象機器</strong>Nexsens XB-200</div>
+      <div class="meta-item"><strong>比較期間</strong>2026/1/19〜2/14</div>
+    </div>
+  </div>
+</header>
+
+<!-- ══ NAV ══ -->
+<nav>
+  <ul>
+    <li><a href="#overview">検証概要</a></li>
+    <li><a href="#location">設置位置</a></li>
+    <li><a href="#mooring">係留構成</a></li>
+    <li><a href="#comparison">データ比較</a></li>
+    <li><a href="#correlation">相関解析</a></li>
+    <li><a href="#position">定点保持</a></li>
+    <li><a href="#parameters">推奨パラメータ</a></li>
+  </ul>
+</nav>
+
+<!-- ══ MAIN ══ -->
+<main>
+
+  <!-- 01 検証概要 -->
+  <section id="overview">
+    <div class="sec-head"><span class="sec-num">01</span><h2>検証概要</h2></div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-label">相関係数（波高）</div>
+        <div class="card-value">0.99</div>
+      </div>
+      <div class="card">
+        <div class="card-label">回帰式勾配</div>
+        <div class="card-value">0.85</div>
+      </div>
+      <div class="card">
+        <div class="card-label">XB-200 設置水深</div>
+        <div class="card-value">約20<span class="card-unit">m</span></div>
+      </div>
+      <div class="card">
+        <div class="card-label">ナウファス水深</div>
+        <div class="card-value">32.7<span class="card-unit">m</span></div>
+      </div>
+      <div class="card">
+        <div class="card-label">定点保持半径</div>
+        <div class="card-value">約38<span class="card-unit">m</span></div>
+      </div>
+    </div>
+    <div class="prose">
+      <p>社内で導入を検討中の波浪ブイ（Nexsens XB-200）と、ナウファスの直江津地点のデータを2026年1月19日〜2月14日の期間で比較検証しました。</p>
+      <p>設置地点の水深（20m vs 32.7m）および沖防波堤との位置関係が異なるため、単純な数値比較には注意が必要ですが、代表的な波浪諸元（波高・周期・波向）の整合性を確認しています。</p>
+    </div>
+    <div class="callout">
+      <div class="callout-title">主要な結論</div>
+      <p>波高の相関係数 R=0.99 と非常に高く、実用的な精度を有する。ブイ波高はナウファス比で約15%低く、水深差（浅水変形）を考慮すると実質的な差異は約10%と推定される。</p>
+    </div>
+  </section>
+
+  <!-- 02 設置位置 -->
+  <section id="location">
+    <div class="sec-head"><span class="sec-num">02</span><h2>設置位置</h2></div>
+    <div id="survey-map"></div>
+    <p style="font-family:var(--mono);font-size:11px;color:var(--mute);margin-top:6px;">地図：© OpenStreetMap contributors　●赤：XB-200　●青：Nowphas直江津</p>
+    <figure style="margin-top:16px;">
+      <img src="figures/img_location.png" alt="設置位置図">
+      <figcaption><strong>図1</strong> 設置位置図（Google Earth）。Nowphas直江津（水深32.7m）とXB-200（水深約20m）の位置関係。両地点間の距離は約2km。</figcaption>
+    </figure>
+  </section>
+
+  <!-- 03 係留構成 -->
+  <section id="mooring">
+    <div class="sec-head"><span class="sec-num">03</span><h2>係留構成</h2></div>
+    <figure>
+      <img src="figures/img_mooring.png" alt="係留構成イメージ">
+      <figcaption><strong>図2</strong> 係留構成案。ケブラー・ロープ（L=40m）、チェーン（50kg、L=10m）、アンカー（30kg）を使用。設置水深は約20m。</figcaption>
+    </figure>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>部材</th><th>仕様</th><th>備考</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>ケブラー・ロープ</td><td>L = 40 m</td><td>高強度・低伸縮性</td></tr>
+          <tr><td>チェーン</td><td>50 kg、L = 10 m</td><td>定点保持の安定化</td></tr>
+          <tr><td>アンカー</td><td>30 kg</td><td>走錨なし（確認済）</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 04 データ比較 -->
+  <section id="comparison">
+    <div class="sec-head"><span class="sec-num">04</span><h2>データ比較（波高・周期・波向）</h2></div>
+    <div class="prose">
+      <p>XB-200とナウファスで使用するパラメータは定義が異なります。比較の前提として以下を確認してください。</p>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>諸元</th><th>XB-200 パラメータ</th><th>ナウファス パラメータ</th><th>留意点</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>波高</td><td>Hs（スペクトル法）</td><td>H1/3（有義波高）</td><td>ブイはやや小さめに出る傾向</td></tr>
+          <tr><td>周期</td><td>DominantPeriodFW（ピーク）</td><td>T1/3（有義波周期）</td><td>定義が異なり単純比較不可</td></tr>
+          <tr><td>波向</td><td>WaveDirectionFW</td><td>ピーク波向（Wdir）</td><td>傾向は概ね一致</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figure>
+      <img src="figures/img_main_comparison.png" alt="波高・周期・波向の比較">
+      <figcaption><strong>図3</strong> 主要パラメータ（波高・周期・波向）の時系列比較（2026/1/19〜2/14）。波高はブイがナウファスより概ね低い値を示す。波向の傾向は概ね一致。</figcaption>
+    </figure>
+  </section>
+
+  <!-- 05 相関解析 -->
+  <section id="correlation">
+    <div class="sec-head"><span class="sec-num">05</span><h2>相関解析</h2></div>
+    <figure>
+      <img src="figures/img_correlation.png" alt="波高の相関図">
+      <figcaption><strong>図4</strong> 波高の相関（R=0.991、y=0.85x+0.0）。点の色は波向を示す。西〜西北西（280〜300°）の波向でブイ波高が減衰する傾向が見られる。</figcaption>
+    </figure>
+    <div class="prose">
+      <p>回帰式の勾配は <strong>0.85</strong> であり、ブイの波高がナウファス比で約15%低く算出されます。ただし、水深32.7mから20mへの浅水変形を考慮すると、実質的な差異は <strong>約10%</strong> と推察されます。</p>
+      <p>特に西〜西北西方向の波向（点の色が青〜紫）のデータで、ブイ波高が相対的に小さくなる傾向が確認されました。これは沖防波堤の遮蔽効果の影響と考えられます。</p>
+    </div>
+  </section>
+
+  <!-- 06 定点保持 -->
+  <section id="position">
+    <div class="sec-head"><span class="sec-num">06</span><h2>定点保持性能</h2></div>
+    <figure>
+      <img src="figures/img_position.png" alt="波高とブイ位置の変化">
+      <figcaption><strong>図5</strong> 波高とブイ位置の変化。ブイは原点（アンカー位置）を中心に約38mの半径内に分布。波高が大きいほど北側へ偏位する傾向。走錨は確認されなかった。</figcaption>
+    </figure>
+    <div class="callout">
+      <div class="callout-title">定点保持の評価</div>
+      <p>全期間を通じて約38mの半径内に収まっており、アンカーの走錨は見られなかった。高波浪時（Hs≧3m）には北方向への偏位が大きくなる傾向があるが、実用上問題のない範囲と判断する。</p>
+    </div>
+  </section>
+
+  <!-- 07 推奨パラメータ -->
+  <section id="parameters">
+    <div class="sec-head"><span class="sec-num">07</span><h2>推奨パラメータの検討</h2></div>
+    <div class="prose">
+      <p>メーカーソフトから出力されるWA*.csvファイル（58種類のパラメータ）のうち、ナウファスとの時系列比較に基づき、以下の3パラメータを推奨します。</p>
+    </div>
+
+    <div class="param-list">
+      <div class="param-item">
+        <div class="param-badge">波高</div>
+        <div>
+          <div class="param-name">Hs（有義波高）</div>
+          <div class="param-desc">ゼロアップクロス法に最も近い値を示し、ナウファスH1/3との整合性が最も良好。Hm0・H3より安定した時系列を示す。</div>
+        </div>
+      </div>
+      <div class="param-item">
+        <div class="param-badge">周期</div>
+        <div>
+          <div class="param-name">DominantPeriodFW（卓越周期）</div>
+          <div class="param-desc">4種の周期パラメータ中、バラつきが最も小さく安定。ナウファスT1/3との傾向が一致。DominantPeriodおよびDominantPeriodTWも類似の結果。</div>
+        </div>
+      </div>
+      <div class="param-item">
+        <div class="param-badge">波向</div>
+        <div>
+          <div class="param-name">WaveDirectionFW（卓越波向）</div>
+          <div class="param-desc">4種の波向パラメータ中で最も安定した値を示す。ナウファスのピーク波向との概ね一致を確認。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 各パラメータ比較図 -->
+    <h3 style="font-family:var(--serif);font-size:15px;color:var(--navy);margin:28px 0 16px;">パラメータ別　時系列比較</h3>
+    <div class="fig-grid">
+      <figure>
+        <img src="figures/img_hs.png" alt="有義波高系パラメータ比較">
+        <figcaption><strong>図6</strong> 有義波高系（Hs, Hm0, H3eps, H3）の比較。Hsが最も安定。</figcaption>
+      </figure>
+      <figure>
+        <img src="figures/img_hmax.png" alt="最大波高系パラメータ比較">
+        <figcaption><strong>図7</strong> 最大波高系（Hmax, HmaxZC）の比較。両者は概ね一致。</figcaption>
+      </figure>
+    </div>
+    <div class="fig-grid">
+      <figure>
+        <img src="figures/img_period.png" alt="卓越周期系パラメータ比較">
+        <figcaption><strong>図8</strong> 卓越周期系（DominantPeriod, DominantPeriodFW, DominantPeriodTW）の比較。</figcaption>
+      </figure>
+      <figure>
+        <img src="figures/img_direction.png" alt="卓越波向系パラメータ比較">
+        <figcaption><strong>図9</strong> 卓越波向系（WaveDirection, WaveDirectionTW, WaveDirectionCF, WaveDirectionFW）の比較。</figcaption>
+      </figure>
+    </div>
+  </section>
+
+</main>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div>沿岸海洋調査株式会社　技術開発部</div>
+  <div>© 2026 Coastal Ocean Survey Co., Ltd.</div>
+</footer>
+
+<!-- ══ 地図スクリプト ══ -->
+<script>
+var map = L.map('survey-map').setView([37.224, 138.274], 12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  maxZoom: 18
+}).addTo(map);
+
+var points = [
+  { lat: 37.233, lng: 138.266, name: "Nowphas 直江津", depth: "32.7m", color: "#1e4a8a" },
+  { lat: 37.216, lng: 138.283, name: "波浪ブイ XB-200", depth: "約20m",  color: "#cc3333" }
+];
+
+points.forEach(function(p){
+  L.circleMarker([p.lat, p.lng], {
+    radius: 9, fillColor: p.color, color: '#ffffff', weight: 2.5, fillOpacity: 0.9
+  }).addTo(map)
+    .bindPopup('<strong>' + p.name + '</strong><br>水深：' + p.depth);
+});
+</script>
+
+</body>
+</html>
